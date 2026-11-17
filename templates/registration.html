@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}Yangi Mehmon Qabul Qilish — {{ hotel_settings.hotel_name }}{% endblock %}
+{% block header_title %}Yangi Mehmonni Ro‘yxatga Olish{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('register_guest') }}" id="registrationForm">
+    <input type="hidden" name="guest_id" id="guest_id" value="">
+    <input type="hidden" name="action_type" id="action_type" value="save">
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+        <!-- Chap Tomon: Mehmon va Joylashuv formalari -->
+        <div>
+            <!-- 1. SHAXSIY MA'LUMOTLAR -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:20px; height:20px; color:var(--primary);">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        1. Mehmonning Shaxsiy Ma'lumotlari
+                    </div>
+                    <span id="passport_lookup_status" class="badge badge-secondary">Pasport kiritilganda avtomatik qidiriladi</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <!-- Pasport -->
+                        <div class="form-group">
+                            <label class="form-label" for="passport_series_num">
+                                Pasport / ID karta seriyasi & raqami <span class="required">*</span>
+                            </label>
+                            <input type="text" name="passport_series_num" id="passport_series_num" class="form-control" 
+                                   placeholder="Masalan: AA1234567 yoki AB9876543" required autofocus>
+                            <span class="form-hint">Doimiy mehmon bo‘lsa ma'lumotlar avtomatik to‘ldiriladi</span>
+                        </div>
+
+                        <!-- F.I.SH -->
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label" for="full_name">
+                                Mehmon To‘liq Ismi (F.I.SH) <span class="required">*</span>
+                            </label>
+                            <input type="text" name="full_name" id="full_name" class="form-control" 
+                                   placeholder="Familiya Ism Otasining ismi" required>
+                        </div>
+
+                        <!-- Telefon -->
+                        <div class="form-group">
+                            <label class="form-label" for="phone">
+                                Telefon raqami <span class="required">*</span>
+                            </label>
+                            <input type="tel" name="phone" id="phone" class="form-control" 
+                                   placeholder="+998 90 123 45 67" required>
+                        </div>
+
+                        <!-- JSHSHIR (PINFL) -->
+                        <div class="form-group">
+                            <label class="form-label" for="pinfl">
+                                JSHSHIR (PINFL — 14 ta raqam)
+                            </label>
+                            <input type="text" name="pinfl" id="pinfl" class="form-control" 
+                                   placeholder="Masalan: 31201950000012" maxlength="14">
+                        </div>
+
+                        <!-- Tug'ilgan sana -->
+                        <div class="form-group">
+                            <label class="form-label" for="birth_date">
+                                Tug‘ilgan sanasi
+                            </label>
+                            <input type="date" name="birth_date" id="birth_date" class="form-control">
+                        </div>
+
+                        <!-- Jinsi -->
+                        <div class="form-group">
+                            <label class="form-label" for="gender">
+                                Jinsi
+                            </label>
+                            <select name="gender" id="gender" class="form-control">
+                                <option value="Erkak">Erkak</option>
+                                <option value="Ayol">Ayol</option>
+                            </select>
+                        </div>
+
+                        <!-- Fuqaroligi -->
+                        <div class="form-group">
+                            <label class="form-label" for="nationality">
+                                Fuqaroligi
+                            </label>
+                            <input type="text" name="nationality" id="nationality" class="form-control" 
+                                   value="O‘zbekiston" list="nationalities_list">
+                            <datalist id="nationalities_list">
+                                <option value="O‘zbekiston">
+                                <option value="Qozog‘iston">
+                                <option value="Qirg‘iziston">
+                                <option value="Tojikiston">
+                                <option value="Turkmaniston">
+                                <option value="Rossiya">
+                                <option value="Turkiya">
+                                <option value="AQSH (United States)">
+                                <option value="Germaniya">
+                                <option value="Xitoy">
+                                <option value="Janubiy Koreya">
+                                <option value="Birlashgan Arab Amirliklari">
+                            </datalist>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="form-group">
+                            <label class="form-label" for="email">
+                                Elektron pochta (Email)
+                            </label>
+                            <input type="email" name="email" id="email" class="form-control" 
+                                   placeholder="example@mail.com">
+                        </div>
+
+                        <!-- Yashash manzili -->
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label" for="address">
+                                Doimiy yashash manzili
+                            </label>
+                            <input type="text" name="address" id="address" class="form-control" 
+                                   placeholder="Viloyat, shahar/tuman, ko‘cha, uy raqami">
+                        </div>
+
+                        <!-- Mehmon haqida eslatma -->
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label" for="notes">
+                                Mehmon haqida maxsus eslatma / izoh
+                            </label>
+                            <input type="text" name="notes" id="notes" class="form-control" 
+                                   placeholder="Masalan: VIP mehmon, sokin qavatni afzal ko‘radi...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. JOYLASHUV VA XONA MA'LUMOTLARI -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:20px; height:20px; color:var(--primary);">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        2. Joylashtirish va Xona Tanlash
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <!-- Xonani tanlash -->
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label" for="room_id">
+                                Xona tanlang <span class="required">*</span>
+                            </label>
+                            <select name="room_id" id="room_id" class="form-control" required style="font-size: 15px; font-weight: 600;">
+                                <option value="" disabled {% if not preselected_room_id %}selected{% endif %}>-- Xonani tanlang --</option>
+                                <optgroup label="Bo‘sh va Tayyor Xonalar">
+                                    {% for room in rooms if room.status == 'available' %}
+                                    <option value="{{ room.id }}" 
+                                            data-price="{{ room.daily_price }}"
+                                            {% if preselected_room_id == room.id %}selected{% endif %}>
+                                        № {{ room.room_number }} — {{ room.room_type }} ({{ room.floor }}-qavat) | {{ room.daily_price|currency }} {{ hotel_settings.currency }}/kun
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Boshqa Xonalar (Tozalanayotgan / Band)">
+                                    {% for room in rooms if room.status != 'available' %}
+                                    <option value="{{ room.id }}" 
+                                            data-price="{{ room.daily_price }}"
+                                            {% if preselected_room_id == room.id %}selected{% endif %}>
+                                        № {{ room.room_number }} — {{ room.room_type }} [Holati: {{ room.status }}] | {{ room.daily_price|currency }} {{ hotel_settings.currency }}/kun
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Kirish sanasi va vaqti -->
+                        <div class="form-group">
+                            <label class="form-label" for="check_in_date">
+                                Kirish sanasi <span class="required">*</span>
+                            </label>
+                            <input type="date" name="check_in_date" id="check_in_date" class="form-control" 
+                                   value="{{ today }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="check_in_time">
+                                Kirish vaqti
+                            </label>
+                            <input type="time" name="check_in_time" id="check_in_time" class="form-control" 
+                                   value="{{ hotel_settings.checkin_time }}">
+                        </div>
+
+                        <!-- Chiqish sanasi va vaqti -->
+                        <div class="form-group">
+                            <label class="form-label" for="check_out_date">
+                                Chiqish sanasi <span class="required">*</span>
+                            </label>
+                            <input type="date" name="check_out_date" id="check_out_date" class="form-control" 
+                                   value="{{ tomorrow }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="check_out_time">
+                                Chiqish vaqti
+                            </label>
+                            <input type="time" name="check_out_time" id="check_out_time" class="form-control" 
+                                   value="{{ hotel_settings.checkout_time }}">
+                        </div>
+
+                        <!-- Mehmonlar soni -->
+                        <div class="form-group">
+                            <label class="form-label" for="adults">
+                                Kattalar soni
+                            </label>
+                            <input type="number" name="adults" id="adults" class="form-control" value="1" min="1" max="10">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="children">
+                                Bolalar soni
+                            </label>
+                            <input type="number" name="children" id="children" class="form-control" value="0" min="0" max="10">
+                        </div>
+
+                        <!-- Tashrif maqsadi -->
+                        <div class="form-group">
+                            <label class="form-label" for="purpose">
+                                Tashrif maqsadi
+                            </label>
+                            <select name="purpose" id="purpose" class="form-control">
+                                <option value="Sayohat">Sayohat (Turizm)</option>
+                                <option value="Ish safari">Ish safari (Xizmat safari)</option>
+                                <option value="Konferensiya / Tadbir">Konferensiya / Tadbir</option>
+                                <option value="Davolanish">Davolanish (Tibbiy)</option>
+                                <option value="Oila / Mehmon">Oila / Mehmon</option>
+                                <option value="Tranzit">Tranzit</option>
+                                <option value="Boshqa">Boshqa</option>
+                            </select>
+                        </div>
+
+                        <!-- Holati -->
+                        <div class="form-group">
+                            <label class="form-label" for="status">
+                                Ro‘yxatga olish holati
+                            </label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="active" selected>Faol (Hozir yashaydi / Check-in)</option>
+                                <option value="reserved">Oldindan band qilish (Reservation)</option>
+                            </select>
+                        </div>
+
+                        <!-- Maxsus talablar -->
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label" for="special_requests">
+                                Maxsus istaklar / Qo‘shimcha xizmatlar
+                            </label>
+                            <input type="text" name="special_requests" id="special_requests" class="form-control" 
+                                   placeholder="Masalan: nonushta xonaga, aeroport transferi, qo‘shimcha to‘shak...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- O'ng Tomon: Moliyaviy Hisob-kitob va Saqlash -->
+        <div>
+            <div class="card" style="position: sticky; top: 90px;">
+                <div class="card-header" style="background: var(--primary-light);">
+                    <div class="card-title" style="color: var(--primary);">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:20px; height:20px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                        3. To‘lov va Hisob-kitob
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Kunlik narx -->
+                    <div class="form-group">
+                        <label class="form-label" for="daily_price">
+                            Kunlik xona narxi (so‘m) <span class="required">*</span>
+                        </label>
+                        <input type="number" step="any" name="daily_price" id="daily_price" class="form-control" 
+                               placeholder="0" value="0" required style="font-size: 16px; font-weight: 700;">
+                    </div>
+
+                    <!-- Hisob-kitob kartasi -->
+                    <div class="calc-card" style="margin: 16px 0;">
+                        <div class="calc-row">
+                            <span style="color: var(--gray-600);">Umumiy yashash muddati:</span>
+                            <strong id="display_total_days" style="font-size: 15px;">1 kun</strong>
+                        </div>
+                        <div class="calc-row total">
+                            <span>Jami summa:</span>
+                            <span id="display_total_amount" style="color: var(--primary); font-size: 18px;">0 so‘m</span>
+                        </div>
+                        <div class="calc-row balance">
+                            <span>Qoldiq qarz:</span>
+                            <span id="display_balance">0 so‘m</span>
+                        </div>
+                    </div>
+
+                    <!-- To'langan summa -->
+                    <div class="form-group">
+                        <label class="form-label" for="paid_amount">
+                            Hozir to‘langan summa (so‘m)
+                        </label>
+                        <input type="number" step="any" name="paid_amount" id="paid_amount" class="form-control" 
+                               value="0" style="font-size: 16px; font-weight: 700; color: var(--success);">
+                    </div>
+
+                    <!-- To'lov usuli -->
+                    <div class="form-group">
+                        <label class="form-label" for="payment_method">
+                            To‘lov turi
+                        </label>
+                        <select name="payment_method" id="payment_method" class="form-control">
+                            <option value="Naqd">Naqd pul</option>
+                            <option value="Karta (Uzcard/Humo)">Plastik karta (Uzcard / Humo)</option>
+                            <option value="Payme / Click">Payme / Click / Oson</option>
+                            <option value="Bank o‘tkazmasi">Bank o‘tkazmasi (Hisob raqam)</option>
+                            <option value="Valyuta (USD)">Xorijiy valyuta (USD $)</option>
+                        </select>
+                    </div>
+
+                    <!-- Amal tugmalari -->
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 24px;">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="submitForm('save')">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Ro‘yxatga Olish va Saqlash
+                        </button>
+
+                        <button type="button" class="btn btn-secondary" onclick="submitForm('print_receipt')">
+                            🧾 Saqlash va Chek Chiqarish
+                        </button>
+
+                        <button type="button" class="btn btn-secondary" onclick="submitForm('print_card')">
+                            📋 Saqlash va Mehmon Kartochkasi
+                        </button>
+
+                        <a href="{{ url_for('guests_list') }}" class="btn btn-sm" style="color: var(--gray-500); text-align: center;">
+                            Bekor qilish
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+function submitForm(actionType) {
+    const form = document.getElementById('registrationForm');
+    document.getElementById('action_type').value = actionType;
+    if (form.reportValidity()) {
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
+

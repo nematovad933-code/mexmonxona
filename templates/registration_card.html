@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mehmon Ro‘yxatga Olish Kartochkasi — {{ res.full_name }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+            color: #0f172a;
+        }
+
+        .card-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #cbd5e1;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header h3 {
+            margin: 0 0 4px 0;
+            font-size: 15px;
+            color: #475569;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 11.5px;
+            color: #64748b;
+        }
+
+        .meta-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #f8fafc;
+            padding: 10px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+
+        .form-table td {
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        .form-table .label {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            width: 32%;
+        }
+
+        .form-table .val {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .rules-box {
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .rules-box h4 {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            color: #0f172a;
+            text-transform: uppercase;
+        }
+
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .sign-col {
+            width: 250px;
+            text-align: center;
+        }
+
+        .sign-line {
+            border-bottom: 1px solid #000;
+            margin-top: 50px;
+            margin-bottom: 6px;
+        }
+
+        .actions-bar {
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+        }
+
+        .btn-print { background: #1e40af; color: white; }
+        .btn-back { background: #e2e8f0; color: #334155; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .actions-bar { display: none !important; }
+            .card-container { box-shadow: none; border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="actions-bar">
+        <a href="javascript:history.back()" class="btn btn-back">&larr; Orqaga</a>
+        <button onclick="window.print()" class="btn btn-print">🖨️ Chop etish (Print / PDF)</button>
+    </div>
+
+    <div class="card-container">
+        <div class="header">
+            <h1>{{ hotel_settings.hotel_name }}</h1>
+            <h3>MEHMONNI RO‘YXATGA OLISH KARTASI (ANKETA)</h3>
+            <p>Manzil: {{ hotel_settings.address }} | Tel: {{ hotel_settings.phone }}</p>
+        </div>
+
+        <div class="meta-bar">
+            <span>Buyurtma / Ro‘yxatga olish kodi: <strong>{{ res.booking_code }}</strong></span>
+            <span>To‘ldirilgan sana: <strong>{{ res.created_at|format_date }}</strong></span>
+        </div>
+
+        <table class="form-table">
+            <tr>
+                <td class="label">Mehmon F.I.SH:</td>
+                <td class="val" colspan="3">{{ res.full_name }}</td>
+            </tr>
+            <tr>
+                <td class="label">Pasport / ID seriya va raqami:</td>
+                <td class="val">{{ res.passport_series_num }}</td>
+                <td class="label">JSHSHIR (PINFL):</td>
+                <td class="val">{{ res.pinfl or '—' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Tug‘ilgan sanasi:</td>
+                <td class="val">{{ res.birth_date or '—' }}</td>
+                <td class="label">Jinsi:</td>
+                <td class="val">{{ res.gender }}</td>
+            </tr>
+            <tr>
+                <td class="label">Fuqaroligi:</td>
+                <td class="val">{{ res.nationality }}</td>
+                <td class="label">Telefon raqami:</td>
+                <td class="val">{{ res.phone }}</td>
+            </tr>
+            <tr>
+                <td class="label">Elektron pochta (Email):</td>
+                <td class="val">{{ res.email or '—' }}</td>
+                <td class="label">Tashrif maqsadi:</td>
+                <td class="val">{{ res.purpose }}</td>
+            </tr>
+            <tr>
+                <td class="label">Doimiy yashash manzili:</td>
+                <td class="val" colspan="3">{{ res.address or '—' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Biriktirilgan xona:</td>
+                <td class="val" colspan="3">
+                    <strong>№ {{ res.room_number }}</strong> — {{ res.room_type }} ({{ res.floor }}-qavat)
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Kirish sanasi va vaqti:</td>
+                <td class="val">{{ res.check_in_date|format_date }} ({{ res.check_in_time }})</td>
+                <td class="label">Chiqish sanasi va vaqti:</td>
+                <td class="val">{{ res.check_out_date|format_date }} ({{ res.check_out_time }})</td>
+            </tr>
+            <tr>
+                <td class="label">Birga keluvchilar:</td>
+                <td class="val" colspan="3">
+                    {{ res.adults }} nafar katta yoshli {% if res.children %}, {{ res.children }} nafar bola{% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Maxsus talablar / Izohlar:</td>
+                <td class="val" colspan="3">{{ res.special_requests or res.guest_notes or 'Mavjud emas' }}</td>
+            </tr>
+        </table>
+
+        <div class="rules-box">
+            <h4>Mehmonxona Ichki Qoidalari</h4>
+            <ol style="margin: 0; padding-left: 18px;">
+                <li>Hisob-kitob va chiqish vaqti (Check-out) soat <strong>{{ hotel_settings.checkout_time }}</strong> qilib belgilangan.</li>
+                <li>Mehmonxona xonalarida va binoda chekish qat'iyan man etiladi.</li>
+                <li>Mehmonxona mulkiga yetkazilgan zarar uchun mehmon to‘liq moddiy javobgar hisoblanadi.</li>
+                <li>Shaxsiy qimmatbaho buyumlarni xonadagi seyfda yoki qabulxona seyfida saqlash tavsiya etiladi.</li>
+            </ol>
+            <p style="margin-top: 8px; margin-bottom: 0;">
+                <em>Yuqoridagi ma'lumotlarning to‘g‘riligini tasdiqlayman va mehmonxona ichki tartib-qoidalariga rioya qilishga roziman.</em>
+            </p>
+        </div>
+
+        <div class="signatures">
+            <div class="sign-col">
+                <div class="sign-line"></div>
+                <strong>Mehmon Imzosi</strong>
+                <p style="font-size: 12px; margin: 2px 0;">{{ res.full_name }}</p>
+            </div>
+            <div class="sign-col">
+                <div class="sign-line"></div>
+                <strong>Qabulxona Xodimi (Reception)</strong>
+                <p style="font-size: 12px; margin: 2px 0;">{{ hotel_settings.manager_name }}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

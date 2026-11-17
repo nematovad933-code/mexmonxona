@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Mehmonlar Ro‘yxati — {{ hotel_settings.hotel_name }}{% endblock %}
+{% block header_title %}Mehmonlar va Joylashuvlar Ro‘yxati{% endblock %}
+
+{% block content %}
+<div class="card">
+    <!-- Filtrlar va Qidiruv Paneli -->
+    <div class="card-header" style="flex-wrap: wrap; gap: 14px;">
+        <!-- Status bo'yicha filter tugmalari -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <a href="{{ url_for('guests_list', status='all', search=search_query) }}" 
+               class="btn btn-sm {% if current_status == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">
+                Barchasi ({{ reservations|length if current_status == 'all' else 'Barcha' }})
+            </a>
+            <a href="{{ url_for('guests_list', status='active', search=search_query) }}" 
+               class="btn btn-sm {% if current_status == 'active' %}btn-primary{% else %}btn-secondary{% endif %}">
+                🟢 Yashayotganlar (Faol)
+            </a>
+            <a href="{{ url_for('guests_list', status='debtors', search=search_query) }}" 
+               class="btn btn-sm {% if current_status == 'debtors' %}btn-danger{% else %}btn-secondary{% endif %}">
+                ⚠️ Qarzdorlar
+            </a>
+            <a href="{{ url_for('guests_list', status='checked_out', search=search_query) }}" 
+               class="btn btn-sm {% if current_status == 'checked_out' %}btn-primary{% else %}btn-secondary{% endif %}">
+                ⚪ Chiqib ketganlar
+            </a>
+            <a href="{{ url_for('guests_list', status='reserved', search=search_query) }}" 
+               class="btn btn-sm {% if current_status == 'reserved' %}btn-primary{% else %}btn-secondary{% endif %}">
+                🟡 Band qilinganlar
+            </a>
+        </div>
+
+        <!-- Qidiruv va Eksport -->
+        <form method="GET" action="{{ url_for('guests_list') }}" style="display: flex; gap: 8px; flex: 1; max-width: 480px;">
+            <input type="hidden" name="status" value="{{ current_status }}">
+            <input type="text" name="search" class="form-control" placeholder="Ism, pasport, telefon yoki xona..." value="{{ search_query }}">
+            <button type="submit" class="btn btn-secondary btn-sm">Qidirish</button>
+            {% if search_query %}
+            <a href="{{ url_for('guests_list', status=current_status) }}" class="btn btn-secondary btn-sm" title="Tozalash">&times;</a>
+            {% endif %}
+        </form>
+
+        <a href="{{ url_for('export_excel_route', status=current_status, search=search_query) }}" class="btn btn-success btn-sm">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Excel formatida yuklab olish
+        </a>
+    </div>
+
+    <!-- Mehmonlar Jadvali -->
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="data-table" id="guests_table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Buyurtma kodi</th>
+                        <th>Mehmon F.I.SH</th>
+                        <th>Xona & Qavat</th>
+                        <th>Muddat (Kelish & Ketish)</th>
+                        <th>Kun</th>
+                        <th>Jami Summa</th>
+                        <th>To‘langan</th>
+                        <th>Qoldiq Qarz</th>
+                        <th>Holati</th>
+                        <th style="text-align: right;">Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reservations %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><code>{{ r.booking_code }}</code></td>
+                        <td>
+                            <a href="{{ url_for('guest_profile', id=r.guest_id) }}" class="table-guest-name">
+                                {{ r.full_name }}
+                            </a>
+                            <span class="table-subtext">
+                                Tel: {{ r.phone }} | Pasport: {{ r.passport_series_num }} | {{ r.nationality }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-primary" style="font-size: 13px;">№ {{ r.room_number }}</span>
+                            <div class="table-subtext">{{ r.room_type }}</div>
+                        </td>
+                        <td>
+                            <div>{{ r.check_in_date|format_date }} &rarr; {{ r.check_out_date|format_date }}</div>
+                            <span class="table-subtext">{{ r.check_in_time }} - {{ r.check_out_time }}</span>
+                        </td>
+                        <td>{{ r.total_days }} kun</td>
+                        <td><strong>{{ r.total_amount|currency }}</strong> <small>{{ hotel_settings.currency }}</small></td>
+                        <td style="color: var(--success); font-weight: 600;">{{ r.paid_amount|currency }}</td>
+                        <td>
+                            {% if r.balance > 0 %}
+                                <span style="color: var(--danger); font-weight: 700; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">
+                                    {{ r.balance|currency }} {{ hotel_settings.currency }}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-success">✓ To‘liq</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if r.status == 'active' %}
+                                <span class="badge badge-success"><span class="badge-dot"></span> Yashamoqda</span>
+                            {% elif r.status == 'checked_out' %}
+                                <span class="badge badge-secondary">Chiqib ketgan</span>
+                            {% elif r.status == 'reserved' %}
+                                <span class="badge badge-warning">Band qilingan</span>
+                            {% else %}
+                                <span class="badge badge-danger">Bekor qilingan</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 4px; align-items: center;">
+                                <!-- To'lov qo'shish tugmasi -->
+                                {% if r.balance > 0 and r.status == 'active' %}
+                                <button type="button" class="btn btn-sm btn-success" 
+                                        data-modal-target="paymentModal"
+                                        data-action="{{ url_for('add_payment', id=r.id) }}"
+                                        data-guest-name="{{ r.full_name }}"
+                                        data-balance="{{ r.balance }}"
+                                        title="Qo‘shimcha to‘lov qabul qilish">
+                                    + To‘lov
+                                </button>
+                                {% endif %}
+
+                                <!-- Chiqish (Check-out) tugmasi -->
+                                {% if r.status == 'active' %}
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        data-modal-target="checkoutModal"
+                                        data-action="{{ url_for('checkout_guest', id=r.id) }}"
+                                        data-guest-name="{{ r.full_name }} (Xona: {{ r.room_number }})"
+                                        data-balance="{{ r.balance }}"
+                                        title="Chiqarish (Check-Out)">
+                                    Chiqish
+                                </button>
+                                {% endif %}
+
+                                <!-- Chek (Receipt) -->
+                                <a href="{{ url_for('view_receipt', id=r.id) }}" class="btn btn-sm btn-secondary" title="To‘lov kvitansiyasini chop etish" target="_blank">
+                                    🧾 Chek
+                                </a>
+
+                                <!-- Kartochka -->
+                                <a href="{{ url_for('view_registration_card', id=r.id) }}" class="btn btn-sm btn-secondary" title="Ro‘yxatga olish kartochkasi" target="_blank">
+                                    📋
+                                </a>
+
+                                <!-- Tahrirlash -->
+                                <a href="{{ url_for('edit_reservation', id=r.id) }}" class="btn btn-sm btn-secondary" title="Tahrirlash">
+                                    ✏️
+                                </a>
+
+                                <!-- O'chirish -->
+                                <form method="POST" action="{{ url_for('delete_reservation', id=r.id) }}" style="display: inline;" 
+                                      onsubmit="return confirm('Haqiqatan ham ushbu ro‘yxatga olish ma\'lumotini o‘chirmoqchimisiz?');">
+                                    <button type="submit" class="btn btn-sm" style="color: var(--danger); background: none; border: none; padding: 4px 6px;" title="O‘chirish">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 36px; color: var(--gray-400);">
+                            Belgilangan parametrlar bo‘yicha hech qanday ma'lumot topilmadi.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Qo'shimcha To'lov Qabul Qilish Modali -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-dialog">
+        <form method="POST" action="">
+            <div class="modal-header">
+                <div class="modal-title">To‘lov Qabul Qilish</div>
+                <button type="button" class="alert-close-btn" data-modal-close>&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Mehmon: <strong class="modal-guest-name">...</strong></p>
+                <div style="margin: 14px 0; padding: 12px; background: var(--gray-100); border-radius: var(--radius-sm); display: flex; justify-content: space-between;">
+                    <span>Joriy qoldiq qarz:</span>
+                    <strong class="modal-balance-text" style="color: var(--danger); font-size: 15px;">0 so'm</strong>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">To‘lanayotgan summa (so‘m) <span class="required">*</span>:</label>
+                    <input type="number" step="any" name="amount" class="form-control modal-balance-input" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">To‘lov turi:</label>
+                    <select name="payment_method" class="form-control">
+                        <option value="Naqd">Naqd pul</option>
+                        <option value="Karta (Uzcard/Humo)">Plastik karta (Uzcard / Humo)</option>
+                        <option value="Payme / Click">Payme / Click / Oson</option>
+                        <option value="Bank o‘tkazmasi">Bank o‘tkazmasi</option>
+                        <option value="Valyuta (USD)">Valyuta (USD $)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Izoh / Kvitansiya eslatmasi:</label>
+                    <input type="text" name="note" class="form-control" placeholder="Masalan: Qo‘shimcha to‘lov">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Bekor qilish</button>
+                <button type="submit" class="btn btn-success">To‘lovni qabul qilish</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Chiqish (Check-out) qilish Modali -->
+<div class="modal-overlay" id="checkoutModal">
+    <div class="modal-dialog">
+        <form method="POST" action="">
+            <div class="modal-header">
+                <div class="modal-title">Mehmonni Ro‘yxatdan Chiqarish (Check-Out)</div>
+                <button type="button" class="alert-close-btn" data-modal-close>&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Mehmon: <strong class="modal-guest-name">...</strong></p>
+                <div style="margin: 16px 0; padding: 14px; background: var(--gray-100); border-radius: var(--radius-sm);">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>To‘lanishi kerak bo‘lgan qoldiq:</span>
+                        <strong class="modal-balance-text" style="color: var(--danger); font-size: 16px;">0 so'm</strong>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Chiqish vaqtidagi to‘lov summasi:</label>
+                    <input type="number" step="any" name="final_payment" class="form-control modal-balance-input" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">To‘lov usuli:</label>
+                    <select name="payment_method" class="form-control">
+                        <option value="Naqd">Naqd pul</option>
+                        <option value="Karta (Uzcard/Humo)">Plastik karta (Uzcard / Humo)</option>
+                        <option value="Payme / Click">Payme / Click / Oson</option>
+                        <option value="Bank o‘tkazmasi">Bank o‘tkazmasi</option>
+                        <option value="Valyuta (USD)">Valyuta (USD $)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Bekor qilish</button>
+                <button type="submit" class="btn btn-danger">Tasdiqlash & Chiqarish</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

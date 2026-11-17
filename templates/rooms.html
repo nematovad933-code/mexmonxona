@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Xonalar Shaxmatkasi — {{ hotel_settings.hotel_name }}{% endblock %}
+{% block header_title %}Xonalar Holati va Shaxmatka{% endblock %}
+
+{% block content %}
+<!-- Statistika ko'rsatkichlari -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 20px;">
+    <div class="stat-card stat-blue">
+        <div class="stat-info">
+            <span>Jami Xonalar</span>
+            <h3>{{ stats.total_rooms }} ta</h3>
+        </div>
+    </div>
+    <div class="stat-card stat-green">
+        <div class="stat-info">
+            <span>Bo‘sh (Tayyor)</span>
+            <h3>{{ stats.available_rooms }} ta</h3>
+        </div>
+    </div>
+    <div class="stat-card stat-red">
+        <div class="stat-info">
+            <span>Band (Yashayotgan)</span>
+            <h3>{{ stats.occupied_rooms }} ta</h3>
+        </div>
+    </div>
+    <div class="stat-card stat-amber">
+        <div class="stat-info">
+            <span>Tozalanmoqda</span>
+            <h3>{{ stats.cleaning_rooms }} ta</h3>
+        </div>
+    </div>
+    <div class="stat-card stat-purple">
+        <div class="stat-info">
+            <span>Profilaktika / Ta'mir</span>
+            <h3>{{ stats.maintenance_rooms }} ta</h3>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <span>🏨</span> Xonalar Ro‘yxati va Interaktiv Xarita
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-primary btn-sm" data-modal-target="addRoomModal">
+                + Yangi Xona Qo‘shish
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Qavatlar va Xonalar Shaxmatkasi -->
+        <div class="room-grid">
+            {% for room in rooms %}
+            <div class="room-card status-{{ room.status }}">
+                <div>
+                    <div class="room-top">
+                        <span class="room-number">№ {{ room.room_number }}</span>
+                        {% if room.status == 'available' %}
+                            <span class="badge badge-success"><span class="badge-dot"></span> Bo‘sh</span>
+                        {% elif room.status == 'occupied' %}
+                            <span class="badge badge-danger"><span class="badge-dot"></span> Band</span>
+                        {% elif room.status == 'cleaning' %}
+                            <span class="badge badge-warning"><span class="badge-dot"></span> Tozalanmoqda</span>
+                        {% else %}
+                            <span class="badge badge-secondary"><span class="badge-dot"></span> Ta'mirda</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="room-type">{{ room.room_type }} &bull; {{ room.floor }}-qavat</div>
+                    <div class="room-price">{{ room.daily_price|currency }} {{ hotel_settings.currency }} <small style="font-size: 11px; color: var(--gray-400)">/ kun</small></div>
+
+                    <!-- Agar xona band bo'lsa mehmon ma'lumoti -->
+                    {% if room.status == 'occupied' and room.current_guest_name %}
+                    <div class="room-guest-info">
+                        <div class="room-guest-name">👤 {{ room.current_guest_name }}</div>
+                        <div class="room-dates">📅 {{ room.check_in_date|format_date }} &rarr; {{ room.check_out_date|format_date }}</div>
+                    </div>
+                    {% endif %}
+
+                    {% if room.amenities %}
+                    <div style="font-size: 11px; color: var(--gray-500); margin-top: 6px;">
+                        ✨ {{ room.amenities }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="room-actions">
+                    {% if room.status == 'available' %}
+                    <a href="{{ url_for('register_guest', room_id=room.id) }}" class="btn btn-sm btn-primary" style="flex: 1; font-size: 11.5px;">
+                        + Joylashtirish
+                    </a>
+                    {% endif %}
+
+                    <!-- Xona holatini tezkor o'zgartirish menyusi -->
+                    <form method="POST" action="{{ url_for('change_room_status', id=room.id) }}" style="display: inline; flex: 1;">
+                        <select name="status" class="form-control" style="padding: 4px 6px; font-size: 11.5px; height: 28px;" onchange="this.form.submit()">
+                            <option value="available" {% if room.status == 'available' %}selected{% endif %}>Bo‘sh</option>
+                            <option value="occupied" {% if room.status == 'occupied' %}selected{% endif %}>Band</option>
+                            <option value="cleaning" {% if room.status == 'cleaning' %}selected{% endif %}>Tozalanmoqda</option>
+                            <option value="maintenance" {% if room.status == 'maintenance' %}selected{% endif %}>Ta'mirda</option>
+                        </select>
+                    </form>
+
+                    <!-- Tahrirlash tugmasi -->
+                    <button type="button" class="btn btn-sm btn-secondary" 
+                            data-modal-target="editRoomModal"
+                            data-room-id="{{ room.id }}"
+                            data-room-num="{{ room.room_number }}"
+                            data-floor="{{ room.floor }}"
+                            data-type="{{ room.room_type }}"
+                            data-capacity="{{ room.capacity }}"
+                            data-price="{{ room.daily_price }}"
+                            data-status="{{ room.status }}"
+                            data-amenities="{{ room.amenities or '' }}"
+                            data-desc="{{ room.description or '' }}"
+                            onclick="fillEditRoomModal(this)"
+                            title="Tahrirlash">
+                        ✏️
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Yangi Xona Qo'shish Modali -->
+<div class="modal-overlay" id="addRoomModal">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('add_new_room') }}">
+            <div class="modal-header">
+                <div class="modal-title">Yangi Xona Qo‘shish</div>
+                <button type="button" class="alert-close-btn" data-modal-close>&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Xona raqami <span class="required">*</span></label>
+                        <input type="text" name="room_number" class="form-control" placeholder="Masalan: 204" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Qavat</label>
+                        <input type="number" name="floor" class="form-control" value="1" min="1" max="50">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Xona toifasi <span class="required">*</span></label>
+                        <input type="text" name="room_type" class="form-control" placeholder="Standart, Lyuks, VIP..." list="room_types_list" required>
+                        <datalist id="room_types_list">
+                            <option value="Standart 1 kishilik">
+                            <option value="Standart 2 kishilik">
+                            <option value="Polulyuks (Junior Suite)">
+                            <option value="Lyuks (Deluxe Suite)">
+                            <option value="VIP Suite">
+                            <option value="Family (Oilaviy)">
+                            <option value="Ekonom">
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sig‘im (O‘rinlar soni)</label>
+                        <input type="number" name="capacity" class="form-control" value="2" min="1" max="10">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label">Kunlik narxi (so‘m) <span class="required">*</span></label>
+                        <input type="number" step="any" name="daily_price" class="form-control" placeholder="350000" required>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label">Qulayliklar (Amenities)</label>
+                        <input type="text" name="amenities" class="form-control" placeholder="Wi-Fi, TV, Konditsioner, Minibar, Safe...">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label">Tavsif</label>
+                        <textarea name="description" class="form-control" placeholder="Xona haqida qo‘shimcha ma'lumot..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Bekor qilish</button>
+                <button type="submit" class="btn btn-primary">Qo‘shish</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Xonani Tahrirlash Modali -->
+<div class="modal-overlay" id="editRoomModal">
+    <div class="modal-dialog">
+        <form method="POST" id="editRoomForm" action="">
+            <div class="modal-header">
+                <div class="modal-title">Xona Ma'lumotlarini Tahrirlash</div>
+                <button type="button" class="alert-close-btn" data-modal-close>&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Xona raqami</label>
+                        <input type="text" name="room_number" id="edit_room_number" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Qavat</label>
+                        <input type="number" name="floor" id="edit_floor" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Toifasi</label>
+                        <input type="text" name="room_type" id="edit_room_type" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sig‘im</label>
+                        <input type="number" name="capacity" id="edit_capacity" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label">Kunlik narxi (so‘m)</label>
+                        <input type="number" step="any" name="daily_price" id="edit_daily_price" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Holati</label>
+                        <select name="status" id="edit_status" class="form-control">
+                            <option value="available">Bo‘sh</option>
+                            <option value="occupied">Band</option>
+                            <option value="cleaning">Tozalanmoqda</option>
+                            <option value="maintenance">Ta'mirda</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Qulayliklar</label>
+                        <input type="text" name="amenities" id="edit_amenities" class="form-control">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label">Tavsif</label>
+                        <textarea name="description" id="edit_description" class="form-control"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button type="button" class="btn btn-sm btn-danger" onclick="deleteCurrentRoom()">O‘chirish</button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" data-modal-close>Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </div>
+        </form>
+        <!-- Yashirin o'chirish formasi -->
+        <form method="POST" id="deleteRoomForm" action="" style="display:none;"></form>
+    </div>
+</div>
+
+<script>
+let currentEditingRoomId = null;
+
+function fillEditRoomModal(btn) {
+    const id = btn.getAttribute('data-room-id');
+    currentEditingRoomId = id;
+    
+    document.getElementById('editRoomForm').action = `/rooms/${id}/edit`;
+    document.getElementById('deleteRoomForm').action = `/rooms/${id}/delete`;
+    
+    document.getElementById('edit_room_number').value = btn.getAttribute('data-room-num');
+    document.getElementById('edit_floor').value = btn.getAttribute('data-floor');
+    document.getElementById('edit_room_type').value = btn.getAttribute('data-type');
+    document.getElementById('edit_capacity').value = btn.getAttribute('data-capacity');
+    document.getElementById('edit_daily_price').value = btn.getAttribute('data-price');
+    document.getElementById('edit_status').value = btn.getAttribute('data-status');
+    document.getElementById('edit_amenities').value = btn.getAttribute('data-amenities');
+    document.getElementById('edit_description').value = btn.getAttribute('data-desc');
+    
+    document.getElementById('editRoomModal').classList.add('active');
+}
+
+function deleteCurrentRoom() {
+    if (confirm("Haqiqatan ham ushbu xonani o‘chirmoqchimisiz?")) {
+        document.getElementById('deleteRoomForm').submit();
+    }
+}
+</script>
+{% endblock %}
+

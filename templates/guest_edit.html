@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Tahrirlash: {{ res.full_name }} — {{ hotel_settings.hotel_name }}{% endblock %}
+{% block header_title %}Mehmon va Joylashuv Ma'lumotlarini Tahrirlash{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('edit_reservation', id=res.id) }}">
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+        <div>
+            <!-- Shaxsiy ma'lumotlar -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>👤</span> Mehmonning Shaxsiy Ma'lumotlari
+                    </div>
+                    <span>Buyurtma: <code>{{ res.booking_code }}</code></span>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Mehmon To‘liq Ismi (F.I.SH) <span class="required">*</span></label>
+                            <input type="text" name="full_name" class="form-control" value="{{ res.full_name }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Pasport / ID raqami <span class="required">*</span></label>
+                            <input type="text" name="passport_series_num" class="form-control" value="{{ res.passport_series_num }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">JSHSHIR (PINFL)</label>
+                            <input type="text" name="pinfl" class="form-control" value="{{ res.pinfl or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Telefon raqami <span class="required">*</span></label>
+                            <input type="tel" name="phone" class="form-control" value="{{ res.phone }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ res.email or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tug‘ilgan sana</label>
+                            <input type="date" name="birth_date" class="form-control" value="{{ res.birth_date or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Jinsi</label>
+                            <select name="gender" class="form-control">
+                                <option value="Erkak" {% if res.gender == 'Erkak' %}selected{% endif %}>Erkak</option>
+                                <option value="Ayol" {% if res.gender == 'Ayol' %}selected{% endif %}>Ayol</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Fuqaroligi</label>
+                            <input type="text" name="nationality" class="form-control" value="{{ res.nationality }}">
+                        </div>
+
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Doimiy yashash manzili</label>
+                            <input type="text" name="address" class="form-control" value="{{ res.address or '' }}">
+                        </div>
+
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Eslatma</label>
+                            <input type="text" name="notes" class="form-control" value="{{ res.guest_notes or '' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Joylashuv ma'lumotlari -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🏨</span> Xona va Joylashuv Tafsilotlari
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Xona <span class="required">*</span></label>
+                            <select name="room_id" id="room_id" class="form-control" required>
+                                {% for room in rooms %}
+                                <option value="{{ room.id }}" data-price="{{ room.daily_price }}" {% if room.id == res.room_id %}selected{% endif %}>
+                                    № {{ room.room_number }} — {{ room.room_type }} ({{ room.floor }}-qavat) | {{ room.daily_price|currency }} {{ hotel_settings.currency }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Kirish sanasi</label>
+                            <input type="date" name="check_in_date" id="check_in_date" class="form-control" value="{{ res.check_in_date }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kirish vaqti</label>
+                            <input type="time" name="check_in_time" class="form-control" value="{{ res.check_in_time }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Chiqish sanasi</label>
+                            <input type="date" name="check_out_date" id="check_out_date" class="form-control" value="{{ res.check_out_date }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Chiqish vaqti</label>
+                            <input type="time" name="check_out_time" class="form-control" value="{{ res.check_out_time }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Kattalar soni</label>
+                            <input type="number" name="adults" class="form-control" value="{{ res.adults }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bolalar soni</label>
+                            <input type="number" name="children" class="form-control" value="{{ res.children }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tashrif maqsadi</label>
+                            <input type="text" name="purpose" class="form-control" value="{{ res.purpose }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Holati</label>
+                            <select name="status" class="form-control">
+                                <option value="active" {% if res.status == 'active' %}selected{% endif %}>Faol (Yashamoqda)</option>
+                                <option value="checked_out" {% if res.status == 'checked_out' %}selected{% endif %}>Chiqib ketgan</option>
+                                <option value="reserved" {% if res.status == 'reserved' %}selected{% endif %}>Band qilingan</option>
+                                <option value="cancelled" {% if res.status == 'cancelled' %}selected{% endif %}>Bekor qilingan</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Maxsus talablar / Istaklar</label>
+                            <input type="text" name="special_requests" class="form-control" value="{{ res.special_requests or '' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Moliyaviy qism -->
+        <div>
+            <div class="card" style="position: sticky; top: 90px;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>💰</span> Moliyaviy Hisob
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">Kunlik xona narxi (so‘m)</label>
+                        <input type="number" step="any" name="daily_price" id="daily_price" class="form-control" value="{{ res.daily_price }}" required>
+                    </div>
+
+                    <div class="calc-card" style="margin: 16px 0;">
+                        <div class="calc-row">
+                            <span>Yashash muddati:</span>
+                            <strong id="display_total_days">{{ res.total_days }} kun</strong>
+                        </div>
+                        <div class="calc-row total">
+                            <span>Jami summa:</span>
+                            <span id="display_total_amount" style="color: var(--primary);">{{ res.total_amount|currency }} so‘m</span>
+                        </div>
+                        <div class="calc-row balance">
+                            <span>Qoldiq qarz:</span>
+                            <span id="display_balance">{{ res.balance|currency }} so‘m</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Jami to‘langan summa (so‘m)</label>
+                        <input type="number" step="any" name="paid_amount" id="paid_amount" class="form-control" value="{{ res.paid_amount }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">To‘lov turi</label>
+                        <select name="payment_method" class="form-control">
+                            <option value="Naqd" {% if res.payment_method == 'Naqd' %}selected{% endif %}>Naqd pul</option>
+                            <option value="Karta (Uzcard/Humo)" {% if res.payment_method == 'Karta (Uzcard/Humo)' %}selected{% endif %}>Plastik karta</option>
+                            <option value="Payme / Click" {% if res.payment_method == 'Payme / Click' %}selected{% endif %}>Payme / Click</option>
+                            <option value="Bank o‘tkazmasi" {% if res.payment_method == 'Bank o‘tkazmasi' %}selected{% endif %}>Bank o‘tkazmasi</option>
+                            <option value="Valyuta (USD)" {% if res.payment_method == 'Valyuta (USD)' %}selected{% endif %}>Valyuta (USD)</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 24px;">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            ✓ O‘zgarishlarni Saqlash
+                        </button>
+                        <a href="{{ url_for('guests_list') }}" class="btn btn-secondary">
+                            Orqaga qaytish
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
