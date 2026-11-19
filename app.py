@@ -7,7 +7,12 @@ import database
 import export_excel
 
 app = Flask(__name__)
-app.secret_key = 'hotel_management_system_secure_secret_key_2026'
+app.secret_key = os.environ.get('SECRET_KEY', 'hotel_management_system_secure_secret_key_2026')
+
+# Baza va dastlabki ma'lumotlarni ishga tushirish (Railway / Gunicorn uchun)
+import seed_data
+database.init_db()
+seed_data.seed_initial_data()
 
 # Custom Jinja filtrlari
 @app.template_filter('currency')
@@ -416,7 +421,7 @@ def api_guest_by_passport():
     return jsonify({'found': False})
 
 if __name__ == '__main__':
-    database.init_db()
-    print("Mehmonxona boshqaruv tizimi ishga tushmoqda...")
-    print("Brauzer orqali oching: http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    print(f"Mehmonxona boshqaruv tizimi ishga tushmoqda (Port: {port})...")
+    print(f"Brauzer orqali oching: http://localhost:{port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
